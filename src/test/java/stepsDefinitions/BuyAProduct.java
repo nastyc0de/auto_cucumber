@@ -6,24 +6,26 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 
 import java.time.Duration;
 
+import static java.lang.Thread.*;
+
 public class BuyAProduct {
 
     private WebDriver driver;
     @Before
     public void setup () {
-        System.setProperty("webdriver.chrome.driver", System.getProperty("user.dir") + "/src/main/java/drivers/chromedriver");
-        ChromeOptions chromeOptions = new ChromeOptions();
-        chromeOptions.setPageLoadStrategy(PageLoadStrategy.EAGER);
-        driver = new ChromeDriver(chromeOptions);
+        WebDriverManager.chromedriver().setup();
+        driver = new ChromeDriver();
         driver.manage().window().maximize();
     }
 
@@ -35,7 +37,7 @@ public class BuyAProduct {
     @Given("I access to Flow bo")
     public void i_access_to_flow_bo() {
         driver.get("https://flow.bo/");
-        driver.findElement(By.xpath("//li[2]/a")).click();
+        driver.findElement(By.cssSelector("div[class='header content'] li[data-label='o'] a")).click();
     }
     @When("I do login with my account")
     public void i_do_login_with_my_account() {
@@ -45,22 +47,25 @@ public class BuyAProduct {
     }
     @And("I search a product")
     public void i_search_a_product() {
-        driver.findElement(By.id("search")).sendKeys("Dell Laptop Vostro");
-        driver.findElement(By.id("search")).sendKeys(Keys.ENTER);
+        WebElement product = driver.findElement(By.xpath("//div[@class='slick-slide slick-active']//div//a[@title='Cooluli Mini Nevera 4L'][normalize-space()='Cooluli Mini Nevera 4L']"));
+        Actions actions = new Actions(driver);
+        actions.scrollToElement(product);
     }
     @And("I select a product")
     public void i_select_a_product() {
-        driver.findElement(By.xpath("//*[@id=\"product-item-info_11478\"]/a/span/span/img")).click();
+        WebElement product = driver.findElement(By.xpath("//div[@class='slick-slide slick-active']//div//a[@title='Cooluli Mini Nevera 4L'][normalize-space()='Cooluli Mini Nevera 4L']"));
+        product.click();
     }
     @And("I click on the Comprar Ahora button")
     public void i_click_on_the_comprar_ahora_button(){
         driver.findElement(By.xpath("//button[@id='buy-now']")).click();
     }
     @Then("I should be redirected to the checkout page")
-    public void i_should_be_redirected_to_the_checkout_page() {
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+    public void i_should_be_redirected_to_the_checkout_page() throws InterruptedException {
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3));
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("span[class='title']")));
-        WebElement message = driver.findElement(By.cssSelector("span[class='title']"));
+        WebElement message = driver.findElement(By.xpath("//span[@class='title']"));
+        sleep(2000);
         Assert.assertEquals(message.getText(),"Resumen del pedido");
     }
 }
